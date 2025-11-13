@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Alumni-Student Connection Platform Design System
+   Inspired by mountain landscapes with creative gradients
+   All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Base Background - Deep Purple Night */
+    --background: 255 25% 8%;
+    --foreground: 45 100% 95%;
+
+    /* Card System */
+    --card: 255 25% 12%;
+    --card-foreground: 45 100% 95%;
+
+    --popover: 255 25% 12%;
+    --popover-foreground: 45 100% 95%;
+
+    /* Primary - Golden Sunrise */
+    --primary: 45 98% 65%;
+    --primary-foreground: 255 25% 8%;
+
+    /* Secondary - Mountain Purple */
+    --secondary: 280 45% 35%;
+    --secondary-foreground: 45 100% 95%;
+
+    /* Muted - Soft Cloud */
+    --muted: 255 15% 20%;
+    --muted-foreground: 45 30% 75%;
+
+    /* Accent - Sky Blue */
+    --accent: 205 95% 65%;
+    --accent-foreground: 255 25% 8%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 45 100% 95%;
+
+    --border: 255 15% 25%;
+    --input: 255 15% 20%;
+    --ring: 45 98% 65%;
+
+    --radius: 1rem;
+
+    /* Custom Design Tokens */
+    --gradient-hero: linear-gradient(135deg, hsl(280 65% 25%) 0%, hsl(230 60% 50%) 35%, hsl(205 95% 65%) 70%, hsl(45 98% 75%) 100%);
+    --gradient-mountain: linear-gradient(180deg, hsl(280 45% 15%) 0%, hsl(255 35% 25%) 50%, hsl(280 25% 35%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(255 25% 12% / 0.9) 0%, hsl(280 35% 15% / 0.8) 100%);
+    --gradient-button: linear-gradient(135deg, hsl(45 98% 65%) 0%, hsl(35 85% 60%) 100%);
+    
+    /* Shadows */
+    --shadow-glow: 0 0 50px hsl(45 98% 65% / 0.3);
+    --shadow-mountain: 0 20px 40px hsl(255 45% 5% / 0.6);
+    --shadow-card: 0 10px 30px hsl(255 45% 5% / 0.4);
+    
+    /* Animations */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .light {
+    /* Light mode - Bright Sky Theme */
+    --background: 220 25% 96%;
+    --foreground: 255 25% 8%;
+
+    --card: 220 20% 98%;
+    --card-foreground: 255 25% 8%;
+
+    --popover: 220 20% 98%;
+    --popover-foreground: 255 25% 8%;
+
+    --primary: 280 65% 45%;
+    --primary-foreground: 45 100% 95%;
+
+    --secondary: 220 15% 88%;
+    --secondary-foreground: 255 25% 8%;
+
+    --muted: 220 15% 90%;
+    --muted-foreground: 255 15% 45%;
+
+    --accent: 205 95% 55%;
+    --accent-foreground: 220 20% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 220 20% 98%;
+
+    --border: 220 15% 85%;
+    --input: 220 15% 88%;
+    --ring: 280 65% 45%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(220 35% 85%) 0%, hsl(230 50% 75%) 35%, hsl(205 85% 75%) 70%, hsl(45 88% 80%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(220 20% 98% / 0.9) 0%, hsl(220 25% 95% / 0.8) 100%);
+    --shadow-glow: 0 0 30px hsl(280 65% 45% / 0.2);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground overflow-x-hidden;
+    background: var(--gradient-hero);
+    min-height: 100vh;
+  }
+
+  /* Custom Utility Classes */
+  .glass-effect {
+    background: var(--gradient-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  .mountain-shadow {
+    box-shadow: var(--shadow-mountain);
+  }
+
+  .glow-effect {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .hero-text {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 50%, hsl(var(--primary)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease-in-out infinite;
+  }
+
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .floating {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+
+  /* Scroll animations */
+  .fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
