@@ -50,8 +50,8 @@ export class MessagesController {
 
   @Put(':messageId/read')
   @UseGuards(JwtAuthGuard)
-  markAsRead(@Param('messageId') messageId: string) {
-    return this.messagesService.markAsRead(messageId);
+  markAsRead(@Param('messageId') messageId: string, @Request() req) {
+    return this.messagesService.markAsRead(messageId, req.user.id);
   }
 
   @Delete(':messageId')

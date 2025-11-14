@@ -34,11 +34,13 @@ export class ConnectionsController {
   @Put(':connectionId')
   @UseGuards(JwtAuthGuard)
   respondToConnection(
+    @Request() req,
     @Param('connectionId') connectionId: string,
     @Body() respondConnectionRequestDto: RespondConnectionRequestDto,
   ) {
     return this.connectionsService.respondToConnection(
       connectionId,
+      req.user.id,
       respondConnectionRequestDto.accepted,
     );
   }

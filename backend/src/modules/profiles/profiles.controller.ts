@@ -75,11 +75,11 @@ export class ProfilesController {
         location,
         graduationYear: graduationYear ? parseInt(graduationYear.toString()) : undefined,
         industry,
+        sortBy,
+        order,
       },
       page,
       limit,
-      sortBy,
-      order,
     );
   }
 

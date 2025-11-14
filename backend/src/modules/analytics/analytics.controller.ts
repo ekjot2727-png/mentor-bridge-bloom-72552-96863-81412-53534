@@ -70,8 +70,6 @@ export class AnalyticsController {
   ) {
     const data = await this.analyticsService.exportAnalyticsData(
       format,
-      startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined,
     );
 
     if (format === 'csv') {
