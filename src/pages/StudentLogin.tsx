@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, ArrowRight, ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { ApiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
 
 const StudentLogin = () => {
@@ -16,33 +16,24 @@ const StudentLogin = () => {
     email: "",
     password: "",
   });
+  const apiClient = new ApiClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email.trim(),
-        password: formData.password,
-      });
-
-      if (error) throw error;
-
-      // Verify user type is student
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_type')
-        .eq('id', data.user.id)
-        .single();
-
-      if (!profile) {
-        await supabase.auth.signOut();
-        throw new Error('Profile not found');
+      console.log('🔐 Attempting login with:', formData.email);
+      const response = await apiClient.login(formData.email.trim(), formData.password);
+      
+      console.log('✅ Login response:', response);
+      
+      if (!response.accessToken) {
+        throw new Error('No access token received');
       }
 
-      if (profile.user_type !== 'student') {
-        await supabase.auth.signOut();
+      // Verify user is a student
+      if (response.user && response.user.role !== 'student') {
         throw new Error('This account is not registered as a student');
       }
 
@@ -52,9 +43,31 @@ const StudentLogin = () => {
       });
       navigate('/student-portal');
     } catch (error: any) {
+      console.error('❌ Login error:', error);
+      
+      let errorMessage = 'Invalid credentials';
+      
+      // Detailed error handling
+      if (error.code === 'ERR_NETWORK') {
+        errorMessage = 'Network error - Cannot reach server. Make sure backend is running on http://localhost:3000';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Invalid email or password';
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response?.data?.message || 'Bad request';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      console.error('Error details:', {
+        message: errorMessage,
+        status: error.response?.status,
+        code: error.code,
+        data: error.response?.data,
+      });
+      
       toast({
         title: "Login failed",
-        description: error.message || 'Invalid credentials',
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

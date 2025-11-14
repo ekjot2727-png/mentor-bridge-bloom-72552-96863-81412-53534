@@ -15,10 +15,22 @@ export class ApiClient {
   private client: AxiosInstance;
   private token: string | null = null;
 
-  constructor(baseURL: string = import.meta.env.VITE_API_URL || 'http://localhost:3000/api') {
+  constructor(baseURL?: string) {
+    // Use environment variable or direct backend URL
+    const resolvedBaseURL = baseURL || 
+      import.meta.env.VITE_API_URL || 
+      'http://localhost:3000/api';
+    
+    console.log('🔗 API Client initialized');
+    console.log('  Base URL:', resolvedBaseURL);
+    console.log('  VITE_API_URL:', import.meta.env.VITE_API_URL);
+    
     this.client = axios.create({
-      baseURL,
+      baseURL: resolvedBaseURL,
       withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     // Load token from localStorage
@@ -30,15 +42,30 @@ export class ApiClient {
         if (this.token) {
           config.headers.Authorization = `Bearer ${this.token}`;
         }
+        console.log('📤 API Request:', config.method?.toUpperCase(), config.url);
         return config;
       },
-      (error) => Promise.reject(error),
+      (error) => {
+        console.error('❌ Request Error:', error);
+        return Promise.reject(error);
+      },
     );
 
     // Add response interceptor
     this.client.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        console.log('📥 API Response:', response.status, response.config.url);
+        return response;
+      },
       (error: AxiosError) => {
+        console.error('❌ Response Error:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          url: error.config?.url,
+          message: error.message,
+          data: error.response?.data,
+        });
+        
         if (error.response?.status === 401) {
           // Token expired or invalid
           this.clearAuth();

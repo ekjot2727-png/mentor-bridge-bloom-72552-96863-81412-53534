@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Users, ArrowRight, ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { ApiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
 
 const AlumniLogin = () => {
@@ -16,33 +16,21 @@ const AlumniLogin = () => {
     email: "",
     password: "",
   });
+  const apiClient = new ApiClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email.trim(),
-        password: formData.password,
-      });
-
-      if (error) throw error;
-
-      // Verify user type is alumni
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_type')
-        .eq('id', data.user.id)
-        .single();
-
-      if (!profile) {
-        await supabase.auth.signOut();
-        throw new Error('Profile not found');
+      const response = await apiClient.login(formData.email.trim(), formData.password);
+      
+      if (!response.accessToken) {
+        throw new Error('No access token received');
       }
 
-      if (profile.user_type !== 'alumni') {
-        await supabase.auth.signOut();
+      // Verify user is an alumni
+      if (response.user && response.user.role !== 'alumni') {
         throw new Error('This account is not registered as an alumni');
       }
 
@@ -52,9 +40,10 @@ const AlumniLogin = () => {
       });
       navigate('/alumni-portal');
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: "Login failed",
-        description: error.message || 'Invalid credentials',
+        description: error.message || error.response?.data?.message || 'Invalid credentials',
         variant: "destructive",
       });
     } finally {

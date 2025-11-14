@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { ApiClient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,59 +13,38 @@ export default function AdminLogin() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    instituteId: "",
     email: "",
     password: "",
   });
+  const apiClient = new ApiClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Sign in with email and password
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
+      const response = await apiClient.login(formData.email.trim(), formData.password);
 
-      if (authError) throw authError;
-
-      // Verify the institute exists
-      const { data: institute, error: instituteError } = await supabase
-        .from("institutes")
-        .select("*")
-        .eq("institute_id", formData.instituteId)
-        .single();
-
-      if (instituteError || !institute) {
-        await supabase.auth.signOut();
-        throw new Error("Invalid Institute ID");
+      if (!response.accessToken) {
+        throw new Error('No access token received');
       }
 
-      // Check if user has admin role for this institute
-      const { data: roles, error: roleError } = await supabase
-        .from("user_roles")
-        .select("*")
-        .eq("user_id", authData.user.id)
-        .eq("institute_id", institute.id)
-        .eq("role", "admin");
-
-      if (roleError || !roles || roles.length === 0) {
-        await supabase.auth.signOut();
-        throw new Error("You don't have admin access to this institute");
+      // Verify user is admin
+      if (response.user && response.user.role !== 'admin') {
+        throw new Error('This account does not have admin access');
       }
 
       toast({
         title: "Login successful",
-        description: `Welcome to ${institute.name} admin portal`,
+        description: "Welcome to admin portal",
       });
 
       navigate("/admin/dashboard");
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: "Login failed",
-        description: error.message,
+        description: error.message || error.response?.data?.message || 'Invalid credentials',
         variant: "destructive",
       });
     } finally {
@@ -89,16 +68,6 @@ export default function AdminLogin() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="instituteId">Institute ID</Label>
-              <Input
-                id="instituteId"
-                placeholder="e.g., INST-2024-001"
-                value={formData.instituteId}
-                onChange={(e) => setFormData({ ...formData, instituteId: e.target.value })}
-                required
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
