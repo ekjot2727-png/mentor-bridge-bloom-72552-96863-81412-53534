@@ -1,9 +1,20 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { Menu, X, Users, GraduationCap, Heart, MessageCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Menu, X, Users, GraduationCap, Heart, MessageCircle, LogOut } from "lucide-react";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAuthenticated = !!localStorage.getItem('accessToken');
+
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    navigate('/');
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-border/20">
@@ -32,9 +43,47 @@ const Navigation = () => {
             <a href="/feedback" className="text-foreground/80 hover:text-primary transition-colors font-medium">
               Feedback
             </a>
-            <a href="/admin/login" className="text-foreground/60 hover:text-primary transition-colors font-medium text-sm">
-              Admin
-            </a>
+            
+            {isAuthenticated && (
+              <>
+                <a href="/profile-edit" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  Profile
+                </a>
+                <a href="/messages" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm flex items-center gap-1">
+                  <MessageCircle className="h-4 w-4" />
+                  Messages
+                </a>
+                <a href="/connections" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm">
+                  Connections
+                </a>
+                <a href="/alumni-directory" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm">
+                  Alumni
+                </a>
+                {user.role === 'admin' && (
+                  <a href="/admin/dashboard" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm">
+                    Dashboard
+                  </a>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
+              </>
+            )}
+            
+            {!isAuthenticated && (
+              <>
+                <a href="/admin/login" className="text-foreground/60 hover:text-primary transition-colors font-medium text-sm">
+                  Admin
+                </a>
+              </>
+            )}
           </div>
 
 
@@ -63,9 +112,47 @@ const Navigation = () => {
               <a href="/feedback" className="text-foreground/80 hover:text-primary transition-colors font-medium py-2">
                 Feedback
               </a>
-              <a href="/admin/login" className="text-foreground/60 hover:text-primary transition-colors font-medium py-2 text-sm">
-                Admin
-              </a>
+              
+              {isAuthenticated && (
+                <>
+                  <hr className="my-2" />
+                  <a href="/profile-edit" className="text-foreground/80 hover:text-primary transition-colors font-medium py-2">
+                    Edit Profile
+                  </a>
+                  <a href="/messages" className="text-foreground/80 hover:text-primary transition-colors font-medium py-2">
+                    Messages
+                  </a>
+                  <a href="/connections" className="text-foreground/80 hover:text-primary transition-colors font-medium py-2">
+                    Connections
+                  </a>
+                  <a href="/alumni-directory" className="text-foreground/80 hover:text-primary transition-colors font-medium py-2">
+                    Alumni Directory
+                  </a>
+                  {user.role === 'admin' && (
+                    <a href="/admin/dashboard" className="text-foreground/80 hover:text-primary transition-colors font-medium py-2">
+                      Admin Dashboard
+                    </a>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="w-full justify-center mt-2"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </>
+              )}
+              
+              {!isAuthenticated && (
+                <>
+                  <hr className="my-2" />
+                  <a href="/admin/login" className="text-foreground/60 hover:text-primary transition-colors font-medium py-2 text-sm">
+                    Admin Login
+                  </a>
+                </>
+              )}
             </div>
           </div>
         )}

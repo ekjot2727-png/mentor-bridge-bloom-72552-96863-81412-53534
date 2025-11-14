@@ -16,6 +16,10 @@ import AlumniPortal from "./pages/AlumniPortal";
 import About from "./pages/About";
 import ContactUs from "./pages/ContactUs";
 import Feedback from "./pages/Feedback";
+import ProfileEdit from "./pages/ProfileEdit";
+import Messaging from "./pages/Messaging";
+import Connections from "./pages/Connections";
+import AlumniDirectoryPage from "./pages/AlumniDirectory";
 
 // Student Pages
 import MyProfile from "./pages/student/MyProfile";
@@ -83,6 +87,12 @@ const App = () => (
             <Route path="/student/academics" element={<MyAcademics />} />
             <Route path="/student/alumni" element={<StudentAlumniDirectory />} />
             <Route path="/student/messages" element={<StudentMessages />} />
+            
+            {/* Shared Routes */}
+            <Route path="/profile-edit" element={<ProfileEdit />} />
+            <Route path="/messages" element={<Messaging />} />
+            <Route path="/connections" element={<Connections />} />
+            <Route path="/alumni-directory" element={<AlumniDirectoryPage />} />
             
             {/* Alumni Routes */}
             <Route path="/alumni/profile" element={<UpdateProfile />} />

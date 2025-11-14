@@ -1,15 +1,97 @@
-# Quick Reference Guide
+# ⚡ QUICK START GUIDE - MentorBridge Bloom
 
-## 🚀 Getting Started (5 minutes)
+**Get the platform running in 5 minutes!**
 
-### Terminal 1 - Backend
+---
+
+## 🎯 Prerequisites
+
+- Node.js 18+ installed
+- PostgreSQL 18+ installed and running
+- npm or yarn
+
+---
+
+## 🚀 STEP 1: Start Backend
+
 ```bash
 cd backend
 npm install
-cp .env.example .env
-npm run start:dev
-# Runs on http://localhost:3000
+node create-db.js        # Create database
+node seed-db.js          # Seed test data
+npm run start:dev        # Start on port 3000
 ```
+
+✅ Backend running: http://localhost:3000
+
+---
+
+## 🎨 STEP 2: Start Frontend
+
+### In another terminal:
+
+```bash
+npm install
+npm run dev              # Start on port 8080
+```
+
+✅ Frontend running: http://localhost:8080
+
+---
+
+## 🧪 STEP 3: Test Features
+
+### Run automated tests:
+
+```bash
+cd backend
+node e2e-tests.js
+```
+
+### Or manually test in browser:
+
+1. Open http://localhost:8080
+2. Click "Portal Selection"
+3. Login with credentials below
+
+---
+
+## 🔑 Test Credentials
+
+```
+Student:  student@mentorbridge.com / student@123
+Alumni:   alumni@mentorbridge.com / alumni@123
+Admin:    admin@mentorbridge.com / admin@123
+```
+
+---
+
+## ✨ What You Can Do
+
+### Student/Alumni:
+- ✅ Edit profile (20+ fields)
+- ✅ Upload profile photo
+- ✅ Send/receive messages
+- ✅ Request connections
+- ✅ Browse alumni directory (7 filters)
+
+### Admin:
+- ✅ View analytics dashboard
+- ✅ Bulk upload alumni (CSV/Excel)
+- ✅ Export reports (CSV/PDF)
+- ✅ Monitor platform health
+
+---
+
+## 📊 Full Documentation
+
+- **README.md** - Project overview
+- **API_DOCUMENTATION.js** - All 40+ endpoints
+- **PROJECT_COMPLETION_SUMMARY.md** - Complete info
+
+---
+
+## 🎉 Done!
 
 ### Terminal 2 - Frontend  
 ```bash

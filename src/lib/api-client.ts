@@ -51,25 +51,25 @@ export class ApiClient {
 
   // Auth endpoints
   async register(email: string, password: string, firstName: string, lastName: string, role: string) {
-    const response = await this.client.post<ApiResponse>('/auth/register', {
+    const response = await this.client.post<any>('/auth/register', {
       email,
       password,
       firstName,
       lastName,
       role,
     });
-    if (response.data.data.accessToken) {
-      this.setAuth(response.data.data.accessToken, response.data.data.refreshToken);
+    if (response.data.accessToken) {
+      this.setAuth(response.data.accessToken, response.data.refreshToken);
     }
-    return response.data.data;
+    return response.data;
   }
 
   async login(email: string, password: string) {
-    const response = await this.client.post<ApiResponse>('/auth/login', { email, password });
-    if (response.data.data.accessToken) {
-      this.setAuth(response.data.data.accessToken, response.data.data.refreshToken);
+    const response = await this.client.post<any>('/auth/login', { email, password });
+    if (response.data.accessToken) {
+      this.setAuth(response.data.accessToken, response.data.refreshToken);
     }
-    return response.data.data;
+    return response.data;
   }
 
   async logout() {
@@ -211,6 +211,18 @@ export class ApiClient {
       { responseType: 'blob' },
     );
     return response.data;
+  }
+
+  async bulkUploadAlumni(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await this.client.post<ApiResponse>(
+      '/profiles/bulk-upload',
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    );
+    return response.data.data;
   }
 
   // Helper methods
