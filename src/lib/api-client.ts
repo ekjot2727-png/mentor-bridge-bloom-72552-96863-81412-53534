@@ -86,7 +86,7 @@ export class ApiClient {
       role,
     });
     if (response.data.accessToken) {
-      this.setAuth(response.data.accessToken, response.data.refreshToken);
+      this.setAuth(response.data.accessToken, response.data.refreshToken, response.data.user);
     }
     return response.data;
   }
@@ -94,7 +94,7 @@ export class ApiClient {
   async login(email: string, password: string) {
     const response = await this.client.post<any>('/auth/login', { email, password });
     if (response.data.accessToken) {
-      this.setAuth(response.data.accessToken, response.data.refreshToken);
+      this.setAuth(response.data.accessToken, response.data.refreshToken, response.data.user);
     }
     return response.data;
   }
@@ -252,17 +252,138 @@ export class ApiClient {
     return response.data.data;
   }
 
+  // Jobs endpoints
+  async createJob(jobData: any) {
+    const response = await this.client.post<ApiResponse>('/jobs', jobData);
+    return response.data;
+  }
+
+  async getJobs(filters: any = {}) {
+    const response = await this.client.get<ApiResponse>('/jobs', { params: filters });
+    return response.data;
+  }
+
+  async getJobById(jobId: string) {
+    const response = await this.client.get<ApiResponse>(`/jobs/${jobId}`);
+    return response.data;
+  }
+
+  async updateJob(jobId: string, jobData: any) {
+    const response = await this.client.put<ApiResponse>(`/jobs/${jobId}`, jobData);
+    return response.data;
+  }
+
+  async deleteJob(jobId: string) {
+    const response = await this.client.delete<ApiResponse>(`/jobs/${jobId}`);
+    return response.data;
+  }
+
+  async getMyPostedJobs(page = 1, limit = 10) {
+    const response = await this.client.get<ApiResponse>('/jobs/my-postings', {
+      params: { page, limit },
+    });
+    return response.data;
+  }
+
+  async closeJob(jobId: string) {
+    const response = await this.client.patch<ApiResponse>(`/jobs/${jobId}/close`);
+    return response.data;
+  }
+
+  async applyToJob(jobId: string) {
+    const response = await this.client.post<ApiResponse>(`/jobs/${jobId}/apply`);
+    return response.data;
+  }
+
+  async getJobStatistics() {
+    const response = await this.client.get<ApiResponse>('/jobs/statistics');
+    return response.data;
+  }
+
+  // Startups endpoints
+  async createStartup(startupData: any) {
+    const response = await this.client.post<ApiResponse>('/startups', startupData);
+    return response.data;
+  }
+
+  async getStartups(filters: any = {}) {
+    const response = await this.client.get<ApiResponse>('/startups', { params: filters });
+    return response.data;
+  }
+
+  async getStartupById(startupId: string) {
+    const response = await this.client.get<ApiResponse>(`/startups/${startupId}`);
+    return response.data;
+  }
+
+  async getMyStartup() {
+    const response = await this.client.get<ApiResponse>('/startups/my-startup');
+    return response.data;
+  }
+
+  async updateStartup(startupId: string, startupData: any) {
+    const response = await this.client.put<ApiResponse>(`/startups/${startupId}`, startupData);
+    return response.data;
+  }
+
+  async deleteStartup(startupId: string) {
+    const response = await this.client.delete<ApiResponse>(`/startups/${startupId}`);
+    return response.data;
+  }
+
+  async getPendingStartups(page = 1, limit = 10) {
+    const response = await this.client.get<ApiResponse>('/startups/pending', {
+      params: { page, limit },
+    });
+    return response.data;
+  }
+
+  async approveStartup(startupId: string) {
+    const response = await this.client.patch<ApiResponse>(`/startups/${startupId}/approve`);
+    return response.data;
+  }
+
+  async rejectStartup(startupId: string) {
+    const response = await this.client.patch<ApiResponse>(`/startups/${startupId}/reject`);
+    return response.data;
+  }
+
+  async getStartupStatistics() {
+    const response = await this.client.get<ApiResponse>('/startups/statistics');
+    return response.data;
+  }
+
+  // AI Career Advisor endpoints
+  async getCareerAdvice(queryData: any) {
+    const response = await this.client.post<ApiResponse>('/ai/career-advisor', queryData);
+    return response.data;
+  }
+
+  async analyzeCareer() {
+    const response = await this.client.get<ApiResponse>('/ai/career-advisor/analyze');
+    return response.data;
+  }
+
+  async getAlumniMatch() {
+    const response = await this.client.get<ApiResponse>('/ai/alumni-match');
+    return response.data;
+  }
+
   // Helper methods
-  private setAuth(accessToken: string, refreshToken: string) {
+  private setAuth(accessToken: string, refreshToken: string, user?: any) {
     this.token = accessToken;
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
   }
 
   private clearAuth() {
     this.token = null;
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
   }
 
   getAuthToken(): string | null {

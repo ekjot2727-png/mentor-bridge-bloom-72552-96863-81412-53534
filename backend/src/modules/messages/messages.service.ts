@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message, MessageStatus, User } from '@/database/entities';
@@ -30,9 +30,6 @@ export class MessagesService {
     });
 
     const savedMessage = await this.messageRepository.save(message);
-
-    // Emit WebSocket event
-    // this.messagesGateway.sendMessageToUser(receiverId, savedMessage);
 
     return savedMessage;
   }

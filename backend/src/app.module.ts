@@ -6,6 +6,9 @@ import { ProfilesModule } from './modules/profiles/profiles.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { ConnectionsModule } from './modules/connections/connections.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { JobsModule } from './modules/jobs/jobs.module';
+import { AiModule } from './modules/ai/ai.module';
+import { StartupsModule } from './modules/startups/startups.module';
 
 @Module({
   imports: [
@@ -19,6 +22,9 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     MessagesModule,
     ConnectionsModule,
     AnalyticsModule,
+    JobsModule,
+    AiModule,
+    StartupsModule,
   ],
 })
 export class AppModule {}
