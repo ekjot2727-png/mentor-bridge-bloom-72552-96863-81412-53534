@@ -1,0 +1,63 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-lock.json
+yarn-error.log
+
+# Build outputs
+dist
+build
+
+# Development files
+*.md
+.git
+.gitignore
+.env.example
+.env.local
+.env.development
+.env.test
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Test files
+test
+tests
+*.test.ts
+*.spec.ts
+__tests__
+coverage
+.nyc_output
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Logs
+logs
+*.log
+
+# Temporary files
+tmp
+temp
+.tmp
+.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode
+.idea
+
+# Debug
+.debug
+
+# Cache
+.cache
+.npm

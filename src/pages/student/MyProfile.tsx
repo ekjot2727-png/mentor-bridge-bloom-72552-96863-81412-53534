@@ -29,7 +29,7 @@ const MyProfile = () => {
       "Team player and quick learner"
     ],
     projects: [
-      { name: "Alumni Connect Platform", tech: "React, TypeScript, Supabase" },
+      { name: "Alumni Connect Platform", tech: "React, TypeScript, NestJS" },
       { name: "Academic Management System", tech: "Node.js, MongoDB" }
     ]
   };

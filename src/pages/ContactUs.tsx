@@ -25,8 +25,10 @@ const ContactUs = () => {
     setLoading(true);
 
     try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-contact`,
+        `${apiUrl}/contact`,
         {
           method: 'POST',
           headers: {

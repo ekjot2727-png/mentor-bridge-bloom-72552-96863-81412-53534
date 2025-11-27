@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { Users, ArrowRight, ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
 import {
   Command,
@@ -70,46 +70,25 @@ const AlumniRegistration = () => {
     setLoading(true);
 
     try {
-      // Sign up the user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/alumni-portal`,
-          data: {
-            user_type: 'alumni',
-            username: formData.username,
-            full_name: formData.fullName,
-          }
-        }
+      // Register using the backend API
+      const nameParts = formData.fullName.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      await apiClient.register(
+        formData.email,
+        password,
+        firstName,
+        lastName,
+        'alumni'
+      );
+
+      toast({
+        title: "Registration Successful!",
+        description: "Your account has been created. Please login to continue.",
       });
 
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // Update profile with additional data
-        const { error: profileError } = await supabase
-          .from('profiles' as any)
-          .update({
-            company: formData.company,
-            position: formData.position,
-            graduation_year: formData.graduationYear,
-            linkedin_url: formData.linkedinId,
-            location: formData.college,
-            bio: formData.expertise,
-            terms_accepted: true,
-          })
-          .eq('id', authData.user.id);
-
-        if (profileError) throw profileError;
-
-        toast({
-          title: "Registration Successful!",
-          description: "Please check your email to verify your account.",
-        });
-
-        navigate('/alumni-login');
-      }
+      navigate('/alumni-login');
     } catch (error: any) {
       // Only log error message, not full error object with sensitive data
       console.error('Registration failed:', error?.message || 'Unknown error');

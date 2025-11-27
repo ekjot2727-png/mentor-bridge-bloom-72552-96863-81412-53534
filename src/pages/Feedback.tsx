@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 const Feedback = () => {
   const navigate = useNavigate();
@@ -18,9 +17,9 @@ const Feedback = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-    });
+    // Check if user is authenticated via localStorage token
+    const token = localStorage.getItem('accessToken');
+    setIsAuthenticated(!!token);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,15 +47,16 @@ const Feedback = () => {
     setLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = localStorage.getItem('accessToken');
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
       
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-feedback`,
+        `${apiUrl}/feedback`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token}`,
+            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             rating,

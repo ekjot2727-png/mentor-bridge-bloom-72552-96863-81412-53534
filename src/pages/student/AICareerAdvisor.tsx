@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, TrendingUp, Users, Target, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
 
 const AICareerAdvisor = () => {
@@ -51,16 +51,7 @@ const AICareerAdvisor = () => {
   const fetchStudentProfile = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      // @ts-ignore
-      const { data: profile } = await supabase
-        .from('student_profiles')
-        .select('*, profiles(*)')
-        .eq('user_id', user.id)
-        .single();
-
+      const profile = await apiClient.getMyProfile();
       if (profile) {
         setStudentProfile(profile);
         const paths = getCareerPathsForBranch(profile.branch || '', profile.skills || []);
@@ -78,59 +69,26 @@ const AICareerAdvisor = () => {
   };
 
   const fetchMentors = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    // @ts-ignore
-    const { data: alumniProfiles } = await supabase
-      .from('alumni_profiles')
-      .select(`
-        *,
-        profiles(*)
-      `)
-      .eq('availability_for_mentorship', true)
-      .limit(3);
-
-    setMentors(alumniProfiles || []);
-
-    // Fetch mutual connections
-    const connections: Record<string, number> = {};
-    for (const mentor of alumniProfiles || []) {
-      // @ts-ignore
-      const { count } = await supabase
-        .from('connections')
-        .select('*', { count: 'exact', head: true })
-        .eq('alumni_id', mentor.user_id)
-        .eq('status', 'accepted');
-      
-      connections[mentor.user_id] = count || 0;
+    try {
+      const alumniProfiles = await apiClient.getAlumniDirectory();
+      setMentors(alumniProfiles?.slice(0, 3) || []);
+    } catch (error) {
+      console.error('Error fetching mentors:', error);
     }
-    setMutualConnections(connections);
   };
 
   const connectWithMentor = async (mentorId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    // @ts-ignore
-    const { error } = await supabase
-      .from('connections')
-      .insert({
-        student_id: user.id,
-        alumni_id: mentorId,
-        status: 'pending'
+    try {
+      await apiClient.sendConnectionRequest(mentorId);
+      toast({
+        title: "Success",
+        description: "Connection request sent!",
       });
-
-    if (error) {
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to send connection request",
         variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "Connection request sent!",
       });
     }
   };
@@ -247,22 +205,18 @@ const AICareerAdvisor = () => {
                     {mentors.map((mentor, index) => (
                       <Card key={index} className="glass-effect p-6 border border-accent/20 hover:border-accent/40 transition-all text-center">
                         <img 
-                          src={mentor.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${mentor.profiles?.full_name}`} 
-                          alt={mentor.profiles?.full_name}
+                          src={mentor.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${mentor.firstName}`} 
+                          alt={`${mentor.firstName} ${mentor.lastName}`}
                           className="w-20 h-20 rounded-full mx-auto mb-4 ring-2 ring-accent/30"
                         />
-                        <h3 className="font-semibold text-foreground mb-1">{mentor.profiles?.full_name}</h3>
-                        <p className="text-sm text-foreground/70 mb-2">{mentor.position} at {mentor.company}</p>
-                        <p className="text-xs text-foreground/60 mb-3">{mentor.expertise?.join(', ')}</p>
-                        <div className="flex items-center justify-center gap-2 mb-3">
-                          <Users className="h-4 w-4 text-accent" />
-                          <span className="text-sm text-foreground/60">{mutualConnections[mentor.user_id] || 0} connections</span>
-                        </div>
+                        <h3 className="font-semibold text-foreground mb-1">{mentor.firstName} {mentor.lastName}</h3>
+                        <p className="text-sm text-foreground/70 mb-2">{mentor.headline || 'Alumni'}</p>
+                        <p className="text-xs text-foreground/60 mb-3">{mentor.bio?.substring(0, 50)}...</p>
                         <Button 
                           size="sm" 
                           variant="outline" 
                           className="w-full"
-                          onClick={() => connectWithMentor(mentor.user_id)}
+                          onClick={() => connectWithMentor(mentor.id)}
                         >
                           Connect
                         </Button>

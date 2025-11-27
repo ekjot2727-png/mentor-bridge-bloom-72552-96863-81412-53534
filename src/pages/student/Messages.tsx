@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
 
 const Messages = () => {
@@ -28,7 +28,6 @@ const Messages = () => {
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation);
-      subscribeToMessages(selectedConversation);
     }
   }, [selectedConversation]);
 
@@ -39,111 +38,60 @@ const Messages = () => {
   }, [messages]);
 
   const fetchCurrentUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      // @ts-ignore
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+    try {
+      const profile = await apiClient.getMyProfile();
       setCurrentUser(profile);
+    } catch (error) {
+      console.error('Error fetching current user:', error);
     }
   };
 
   const fetchConversations = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    // @ts-ignore
-    const { data, error } = await supabase
-      .from('conversations')
-      .select(`
-        *,
-        participant1:profiles!conversations_participant1_id_fkey(*),
-        participant2:profiles!conversations_participant2_id_fkey(*)
-      `)
-      .or(`participant1_id.eq.${user.id},participant2_id.eq.${user.id}`)
-      .order('updated_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching conversations:', error);
-      return;
-    }
-
-    setConversations(data || []);
-  };
-
-  const fetchMessages = async (conversationId: string) => {
-    // @ts-ignore
-    const { data, error } = await supabase
-      .from('messages')
-      .select(`
-        *,
-        sender:profiles(*)
-      `)
-      .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching messages:', error);
-      return;
-    }
-
-    setMessages(data || []);
-  };
-
-  const subscribeToMessages = (conversationId: string) => {
-    const channel = supabase
-      .channel(`messages:${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new]);
+    try {
+      const data = await apiClient.getMessages();
+      // Group messages by conversation partner
+      const conversationsMap = new Map();
+      data.forEach((msg: any) => {
+        const partnerId = msg.sender?.id === currentUser?.id ? msg.receiver?.id : msg.sender?.id;
+        const partner = msg.sender?.id === currentUser?.id ? msg.receiver : msg.sender;
+        if (partnerId && !conversationsMap.has(partnerId)) {
+          conversationsMap.set(partnerId, {
+            id: partnerId,
+            participant: partner,
+            lastMessage: msg
+          });
         }
-      )
-      .subscribe();
+      });
+      setConversations(Array.from(conversationsMap.values()));
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+    }
+  };
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+  const fetchMessages = async (userId: string) => {
+    try {
+      const data = await apiClient.getConversation(userId);
+      setMessages(data || []);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
   };
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !currentUser) return;
 
-    // @ts-ignore
-    const { error } = await supabase
-      .from('messages')
-      .insert({
-        conversation_id: selectedConversation,
-        sender_id: currentUser.id,
-        content: newMessage.trim(),
-      });
-
-    if (error) {
+    try {
+      await apiClient.sendMessage(selectedConversation, newMessage.trim());
+      setNewMessage("");
+      // Refresh messages
+      fetchMessages(selectedConversation);
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to send message",
         variant: "destructive",
       });
-      return;
     }
-
-    setNewMessage("");
-  };
-
-  const getOtherParticipant = (conversation: any) => {
-    if (!currentUser) return null;
-    return conversation.participant1_id === currentUser.id
-      ? conversation.participant2
-      : conversation.participant1;
   };
 
   return (
@@ -163,31 +111,37 @@ const Messages = () => {
           <Card className="glass-effect p-4">
             <h2 className="text-xl font-semibold mb-4">Conversations</h2>
             <ScrollArea className="h-[calc(100%-3rem)]">
-              {conversations.map((conversation) => {
-                const other = getOtherParticipant(conversation);
-                return (
-                  <div
-                    key={conversation.id}
-                    onClick={() => setSelectedConversation(conversation.id)}
-                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                      selectedConversation === conversation.id
-                        ? 'bg-primary/20'
-                        : 'hover:bg-muted'
-                    }`}
-                  >
-                    <Avatar>
-                      <AvatarImage src={other?.avatar_url} />
-                      <AvatarFallback>{other?.full_name?.[0] || 'U'}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{other?.full_name}</p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {other?.position || other?.student_id}
-                      </p>
+              {conversations.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">No conversations yet</p>
+              ) : (
+                conversations.map((conversation) => {
+                  const other = conversation.participant;
+                  return (
+                    <div
+                      key={conversation.id}
+                      onClick={() => setSelectedConversation(conversation.id)}
+                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                        selectedConversation === conversation.id
+                          ? 'bg-primary/20'
+                          : 'hover:bg-muted'
+                      }`}
+                    >
+                      <Avatar>
+                        <AvatarImage src={other?.avatarUrl} />
+                        <AvatarFallback>{other?.firstName?.[0] || 'U'}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">
+                          {other?.firstName} {other?.lastName}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {conversation.lastMessage?.content}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </ScrollArea>
           </Card>
 
@@ -201,19 +155,19 @@ const Messages = () => {
                       <div
                         key={message.id}
                         className={`flex ${
-                          message.sender_id === currentUser?.id ? 'justify-end' : 'justify-start'
+                          message.sender?.id === currentUser?.id ? 'justify-end' : 'justify-start'
                         }`}
                       >
                         <div
                           className={`max-w-[70%] rounded-lg p-3 ${
-                            message.sender_id === currentUser?.id
+                            message.sender?.id === currentUser?.id
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
                           }`}
                         >
                           <p>{message.content}</p>
                           <p className="text-xs opacity-70 mt-1">
-                            {new Date(message.created_at).toLocaleTimeString()}
+                            {new Date(message.createdAt).toLocaleTimeString()}
                           </p>
                         </div>
                       </div>
