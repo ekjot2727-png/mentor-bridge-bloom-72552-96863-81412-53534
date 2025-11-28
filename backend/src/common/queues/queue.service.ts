@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { QUEUE_NAMES } from './constants';
@@ -28,17 +28,29 @@ export interface AnalyticsJobData {
 
 @Injectable()
 export class QueueService {
+  private readonly isEnabled: boolean;
+
   constructor(
-    @InjectQueue(QUEUE_NAMES.EMAIL) private emailQueue: Queue,
-    @InjectQueue(QUEUE_NAMES.NOTIFICATION) private notificationQueue: Queue,
-    @InjectQueue(QUEUE_NAMES.ANALYTICS) private analyticsQueue: Queue,
+    @Optional() @InjectQueue(QUEUE_NAMES.EMAIL) private emailQueue: Queue,
+    @Optional() @InjectQueue(QUEUE_NAMES.NOTIFICATION) private notificationQueue: Queue,
+    @Optional() @InjectQueue(QUEUE_NAMES.ANALYTICS) private analyticsQueue: Queue,
     private logger: LoggerService,
-  ) {}
+  ) {
+    this.isEnabled = !!emailQueue && !!notificationQueue && !!analyticsQueue;
+    if (!this.isEnabled) {
+      this.logger.warn('Queue service is running without Redis. Jobs will be logged only.');
+    }
+  }
 
   /**
    * Add email to the queue
    */
   async sendEmail(data: EmailJobData, options?: { delay?: number; priority?: number }) {
+    if (!this.isEnabled) {
+      this.logger.log(`[QUEUE DISABLED] Would send email: ${data.subject} to ${data.to}`);
+      return null;
+    }
+
     try {
       const job = await this.emailQueue.add('send-email', data, {
         delay: options?.delay,
@@ -56,6 +68,11 @@ export class QueueService {
    * Add notification to the queue
    */
   async sendNotification(data: NotificationJobData, options?: { delay?: number }) {
+    if (!this.isEnabled) {
+      this.logger.log(`[QUEUE DISABLED] Would send notification: ${data.title} to user ${data.userId}`);
+      return null;
+    }
+
     try {
       const job = await this.notificationQueue.add('send-notification', data, {
         delay: options?.delay,
@@ -72,6 +89,11 @@ export class QueueService {
    * Add analytics event to the queue
    */
   async trackAnalytics(data: AnalyticsJobData) {
+    if (!this.isEnabled) {
+      this.logger.log(`[QUEUE DISABLED] Would track analytics: ${data.event}`);
+      return null;
+    }
+
     try {
       const job = await this.analyticsQueue.add('track-event', data);
       return job;
@@ -85,6 +107,11 @@ export class QueueService {
    * Bulk email sending
    */
   async sendBulkEmails(emails: EmailJobData[]) {
+    if (!this.isEnabled) {
+      this.logger.log(`[QUEUE DISABLED] Would send ${emails.length} bulk emails`);
+      return [];
+    }
+
     const jobs = emails.map((email) => ({
       name: 'send-email',
       data: email,
@@ -104,6 +131,11 @@ export class QueueService {
    * Bulk notifications
    */
   async sendBulkNotifications(notifications: NotificationJobData[]) {
+    if (!this.isEnabled) {
+      this.logger.log(`[QUEUE DISABLED] Would send ${notifications.length} bulk notifications`);
+      return [];
+    }
+
     const jobs = notifications.map((notification) => ({
       name: 'send-notification',
       data: notification,
@@ -134,6 +166,10 @@ export class QueueService {
    * Get queue statistics
    */
   async getQueueStats() {
+    if (!this.isEnabled) {
+      return { email: {}, notification: {}, analytics: {}, enabled: false };
+    }
+
     const [emailCounts, notificationCounts, analyticsCounts] = await Promise.all([
       this.emailQueue.getJobCounts(),
       this.notificationQueue.getJobCounts(),
@@ -144,6 +180,7 @@ export class QueueService {
       email: emailCounts,
       notification: notificationCounts,
       analytics: analyticsCounts,
+      enabled: true,
     };
   }
 
@@ -151,6 +188,10 @@ export class QueueService {
    * Pause a queue
    */
   async pauseQueue(queueName: keyof typeof QUEUE_NAMES) {
+    if (!this.isEnabled) {
+      this.logger.warn('[QUEUE DISABLED] Cannot pause queue');
+      return;
+    }
     const queue = this.getQueue(queueName);
     await queue.pause();
     this.logger.log(`Queue ${queueName} paused`);
@@ -160,6 +201,10 @@ export class QueueService {
    * Resume a queue
    */
   async resumeQueue(queueName: keyof typeof QUEUE_NAMES) {
+    if (!this.isEnabled) {
+      this.logger.warn('[QUEUE DISABLED] Cannot resume queue');
+      return;
+    }
     const queue = this.getQueue(queueName);
     await queue.resume();
     this.logger.log(`Queue ${queueName} resumed`);

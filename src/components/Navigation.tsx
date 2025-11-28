@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
-import { Menu, X, Users, GraduationCap, Heart, MessageCircle, LogOut } from "lucide-react";
+import { Menu, X, Users, GraduationCap, Heart, MessageCircle, LogOut, Gift } from "lucide-react";
+import { NotificationBell } from "./NotificationBell";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -57,6 +58,10 @@ const Navigation = () => {
                 <a href="/connections" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm">
                   Connections
                 </a>
+                <a href="/donations" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm flex items-center gap-1">
+                  <Gift className="h-4 w-4" />
+                  Donate
+                </a>
                 <a href="/alumni-directory" className="text-foreground/80 hover:text-primary transition-colors font-medium text-sm">
                   Alumni
                 </a>
@@ -65,6 +70,7 @@ const Navigation = () => {
                     Dashboard
                   </a>
                 )}
+                <NotificationBell />
                 <Button
                   variant="outline"
                   size="sm"
@@ -124,6 +130,10 @@ const Navigation = () => {
                   </a>
                   <a href="/connections" className="text-foreground/80 hover:text-primary transition-colors font-medium py-2">
                     Connections
+                  </a>
+                  <a href="/donations" className="text-foreground/80 hover:text-primary transition-colors font-medium py-2 flex items-center gap-2">
+                    <Gift className="h-4 w-4" />
+                    Donate
                   </a>
                   <a href="/alumni-directory" className="text-foreground/80 hover:text-primary transition-colors font-medium py-2">
                     Alumni Directory

@@ -35,7 +35,9 @@ export class MessagesService {
   }
 
   async getConversation(userId: string, otherUserId: string, page = 1, limit = 50) {
-    const skip = (page - 1) * limit;
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 50;
+    const skip = (pageNum - 1) * limitNum;
 
     const messages = await this.messageRepository.find({
       where: [
@@ -45,7 +47,7 @@ export class MessagesService {
       relations: ['sender', 'receiver'],
       order: { createdAt: 'DESC' },
       skip,
-      take: limit,
+      take: limitNum,
     });
 
     const total = await this.messageRepository.count({
@@ -59,15 +61,17 @@ export class MessagesService {
       data: messages.reverse(),
       pagination: {
         total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
       },
     };
   }
 
   async getConversations(userId: string, page = 1, limit = 20) {
-    const skip = (page - 1) * limit;
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 20;
+    const skip = (pageNum - 1) * limitNum;
 
     const query = this.messageRepository.createQueryBuilder('message')
       .leftJoinAndSelect('message.sender', 'sender')
@@ -76,7 +80,7 @@ export class MessagesService {
       .orderBy('message.createdAt', 'DESC')
       .distinct(true);
 
-    const messages = await query.skip(skip).take(limit).getMany();
+    const messages = await query.skip(skip).take(limitNum).getMany();
 
     // Group by conversation partner
     const conversations = new Map();
@@ -104,9 +108,9 @@ export class MessagesService {
       data: Array.from(conversations.values()),
       pagination: {
         total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
       },
     };
   }

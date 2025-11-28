@@ -28,7 +28,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     CommonModule,
     DatabaseModule,
     HealthModule,
-    QueueModule,
+    QueueModule.register(),
     RateLimitModule,
     AuthModule,
     ProfilesModule,

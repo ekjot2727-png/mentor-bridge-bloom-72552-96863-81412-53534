@@ -239,18 +239,20 @@ export class DonationsService {
    * Get user's donations
    */
   async getUserDonations(userId: string, page = 1, limit = 10) {
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 10;
     const [donations, total] = await this.donationRepository.findAndCount({
       where: { userId },
       order: { createdAt: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: (pageNum - 1) * limitNum,
+      take: limitNum,
     });
 
     return {
       data: donations,
       total,
-      page,
-      totalPages: Math.ceil(total / limit),
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
     };
   }
 
@@ -309,6 +311,8 @@ export class DonationsService {
    * Get all donations (admin)
    */
   async getAllDonations(page = 1, limit = 20, status?: DonationStatus) {
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 20;
     const where: any = {};
     if (status) {
       where.status = status;
@@ -318,15 +322,15 @@ export class DonationsService {
       where,
       relations: ['user'],
       order: { createdAt: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: (pageNum - 1) * limitNum,
+      take: limitNum,
     });
 
     return {
       data: donations,
       total,
-      page,
-      totalPages: Math.ceil(total / limit),
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
     };
   }
 }

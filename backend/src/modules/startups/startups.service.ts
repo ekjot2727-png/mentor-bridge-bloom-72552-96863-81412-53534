@@ -42,7 +42,9 @@ export class StartupsService {
 
   async getStartups(filterDto: StartupFilterDto) {
     const { keyword, stage, status, fundingStage, industry, location, technology, page = 1, limit = 10 } = filterDto;
-    const skip = (page - 1) * limit;
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 10;
+    const skip = (pageNum - 1) * limitNum;
 
     const queryBuilder = this.startupRepository.createQueryBuilder('startup')
       .leftJoinAndSelect('startup.founder', 'founder');
@@ -84,7 +86,7 @@ export class StartupsService {
     queryBuilder
       .orderBy('startup.createdAt', 'DESC')
       .skip(skip)
-      .take(limit);
+      .take(limitNum);
 
     const [startups, total] = await queryBuilder.getManyAndCount();
 
@@ -92,9 +94,9 @@ export class StartupsService {
       data: startups,
       pagination: {
         total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
       },
     };
   }
@@ -201,23 +203,25 @@ export class StartupsService {
   }
 
   async getPendingStartups(page = 1, limit = 10) {
-    const skip = (page - 1) * limit;
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 10;
+    const skip = (pageNum - 1) * limitNum;
 
     const [startups, total] = await this.startupRepository.findAndCount({
       where: { status: StartupStatus.PENDING },
       relations: ['founder'],
       order: { createdAt: 'DESC' },
       skip,
-      take: limit,
+      take: limitNum,
     });
 
     return {
       data: startups,
       pagination: {
         total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
       },
     };
   }

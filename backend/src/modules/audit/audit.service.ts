@@ -70,6 +70,8 @@ export class AuditService {
    */
   async query(options: AuditQueryOptions): Promise<{ data: AuditLog[]; total: number }> {
     const { userId, action, category, resource, startDate, endDate, page = 1, limit = 50 } = options;
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 50;
 
     const queryBuilder = this.auditLogRepository.createQueryBuilder('audit');
 
@@ -99,8 +101,8 @@ export class AuditService {
 
     queryBuilder
       .orderBy('audit.createdAt', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit);
+      .skip((pageNum - 1) * limitNum)
+      .take(limitNum);
 
     const [data, total] = await queryBuilder.getManyAndCount();
 

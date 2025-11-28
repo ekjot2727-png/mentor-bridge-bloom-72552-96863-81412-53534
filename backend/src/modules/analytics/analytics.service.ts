@@ -84,7 +84,7 @@ export class AnalyticsService {
     // Login activity
     const uniqueLoginUsers = await this.analyticsRepository
       .createQueryBuilder('analytics')
-      .select('COUNT(DISTINCT userId)', 'count')
+      .select('COUNT(DISTINCT analytics."userId")', 'count')
       .where('analytics.eventType = :eventType', { eventType: 'login' })
       .andWhere('analytics.createdAt BETWEEN :startDate AND :endDate', {
         startDate: startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),

@@ -80,7 +80,9 @@ export class ConnectionsService {
   }
 
   async getConnections(userId: string, page = 1, limit = 20) {
-    const skip = (page - 1) * limit;
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 20;
+    const skip = (pageNum - 1) * limitNum;
 
     const [connections, total] = await this.connectionRepository.findAndCount({
       where: [
@@ -89,7 +91,7 @@ export class ConnectionsService {
       ],
       relations: ['requester', 'receiver', 'requester.profile', 'receiver.profile'],
       skip,
-      take: limit,
+      take: limitNum,
       order: { createdAt: 'DESC' },
     });
 
@@ -105,15 +107,17 @@ export class ConnectionsService {
       data: connectionProfiles,
       pagination: {
         total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
       },
     };
   }
 
   async getPendingRequests(userId: string, page = 1, limit = 20) {
-    const skip = (page - 1) * limit;
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 20;
+    const skip = (pageNum - 1) * limitNum;
 
     const [requests, total] = await this.connectionRepository.findAndCount({
       where: {
@@ -122,7 +126,7 @@ export class ConnectionsService {
       },
       relations: ['requester', 'requester.profile'],
       skip,
-      take: limit,
+      take: limitNum,
       order: { createdAt: 'DESC' },
     });
 
@@ -130,9 +134,9 @@ export class ConnectionsService {
       data: requests,
       pagination: {
         total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
       },
     };
   }

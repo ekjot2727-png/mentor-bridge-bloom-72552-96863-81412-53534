@@ -130,7 +130,12 @@ export class ProfilesService {
   }
 
   async searchAlumni(filters: any, page = 1, limit = 20) {
+    // Ensure page and limit are numbers
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 20;
+    
     const query = this.profileRepository.createQueryBuilder('profile')
+      .leftJoinAndSelect('profile.user', 'user')
       .where('profile.profileType = :profileType', { profileType: ProfileType.ALUMNI })
       .andWhere('profile.isPublic = true');
 
@@ -142,8 +147,16 @@ export class ProfilesService {
       );
     }
 
+    // Skills is stored as simple-array (comma-separated string), so use LIKE
     if (filters.skills && filters.skills.length > 0) {
-      query.andWhere('profile.skills && :skills', { skills: filters.skills });
+      const skillConditions = filters.skills.map((skill: string, index: number) => {
+        return `profile.skills ILIKE :skill${index}`;
+      });
+      const skillParams = filters.skills.reduce((acc: any, skill: string, index: number) => {
+        acc[`skill${index}`] = `%${skill}%`;
+        return acc;
+      }, {});
+      query.andWhere(`(${skillConditions.join(' OR ')})`, skillParams);
     }
 
     if (filters.company) {
@@ -154,7 +167,7 @@ export class ProfilesService {
 
     if (filters.location) {
       query.andWhere(
-        '(profile.city ILIKE :location OR profile.country ILIKE :location)',
+        '(profile.city ILIKE :location OR profile.country ILIKE :location OR profile.location ILIKE :location)',
         { location: `%${filters.location}%` },
       );
     }
@@ -181,18 +194,42 @@ export class ProfilesService {
     query.orderBy(`profile.${sortBy}`, order);
 
     // Pagination
-    const skip = (page - 1) * limit;
-    query.skip(skip).take(limit);
+    const skip = (pageNum - 1) * limitNum;
+    query.skip(skip).take(limitNum);
 
     const [profiles, total] = await query.getManyAndCount();
 
+    // Transform profiles to include user info in the expected format
+    const transformedProfiles = profiles.map(profile => ({
+      id: profile.user?.id || profile.id,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      email: profile.user?.email,
+      role: profile.user?.role || profile.profileType,
+      profile: {
+        id: profile.id,
+        headline: profile.headline,
+        bio: profile.bio,
+        location: profile.location || profile.city,
+        skills: profile.skills,
+        college: profile.departmentOrCourse,
+        graduationYear: profile.graduationYear,
+        company: profile.currentCompany,
+        jobTitle: profile.currentPosition,
+        avatarUrl: profile.profilePhotoUrl,
+        industry: profile.industry,
+        linkedinUrl: profile.linkedinUrl,
+        githubUrl: profile.githubUrl,
+      },
+    }));
+
     return {
-      data: profiles,
+      data: transformedProfiles,
       pagination: {
         total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
       },
     };
   }

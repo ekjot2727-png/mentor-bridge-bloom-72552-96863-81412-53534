@@ -10,7 +10,7 @@ import { QueueModule } from '../../common/queues/queue.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Notification, NotificationPreference]),
-    QueueModule,
+    QueueModule.register(),
   ],
   controllers: [NotificationsController],
   providers: [NotificationsService, NotificationsGateway],

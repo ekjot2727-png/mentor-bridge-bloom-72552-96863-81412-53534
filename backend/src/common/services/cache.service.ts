@@ -5,8 +5,9 @@ import { LoggerService } from './logger.service';
 
 @Injectable()
 export class CacheService implements OnModuleInit, OnModuleDestroy {
-  private redisClient: Redis;
+  private redisClient: Redis | null = null;
   private isConnected: boolean = false;
+  private redisEnabled: boolean = false;
 
   constructor(
     private configService: ConfigService,
@@ -14,6 +15,14 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   async onModuleInit() {
+    // Check if Redis is enabled via environment variable
+    this.redisEnabled = this.configService.get<string>('REDIS_ENABLED', 'true') !== 'false';
+    
+    if (!this.redisEnabled) {
+      this.logger.log('Redis disabled via REDIS_ENABLED=false, caching disabled');
+      return;
+    }
+
     const redisHost = this.configService.get<string>('REDIS_HOST', 'localhost');
     const redisPort = this.configService.get<number>('REDIS_PORT', 6379);
     const redisPassword = this.configService.get<string>('REDIS_PASSWORD', '');
@@ -24,6 +33,8 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       port: redisPort,
       password: redisPassword || undefined,
       db: redisDb,
+      maxRetriesPerRequest: null,
+      enableOfflineQueue: false,
       retryStrategy: (times) => {
         if (times > 3) {
           this.logger.warn('Redis connection failed, running without cache');
@@ -47,6 +58,11 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
     this.redisClient.on('close', () => {
       this.isConnected = false;
       this.logger.warn('Redis connection closed');
+    });
+
+    this.redisClient.on('end', () => {
+      this.isConnected = false;
+      this.logger.warn('Redis connection ended, caching disabled');
     });
 
     try {

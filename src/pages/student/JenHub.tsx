@@ -148,12 +148,12 @@ const JenHub = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Select value={filters.jobType} onValueChange={(v) => setFilters({ ...filters, jobType: v })}>
+                <Select value={filters.jobType || "all"} onValueChange={(v) => setFilters({ ...filters, jobType: v === "all" ? "" : v })}>
                   <SelectTrigger className="w-[140px]">
                     <SelectValue placeholder="Job Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Types</SelectItem>
+                    <SelectItem value="all">All Types</SelectItem>
                     <SelectItem value="full_time">Full-time</SelectItem>
                     <SelectItem value="part_time">Part-time</SelectItem>
                     <SelectItem value="internship">Internship</SelectItem>

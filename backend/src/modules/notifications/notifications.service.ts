@@ -114,6 +114,8 @@ export class NotificationsService {
     options: { page?: number; limit?: number; unreadOnly?: boolean } = {},
   ) {
     const { page = 1, limit = 20, unreadOnly = false } = options;
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 20;
 
     const where: any = { userId };
     if (unreadOnly) {
@@ -124,15 +126,15 @@ export class NotificationsService {
       where,
       relations: ['sender'],
       order: { createdAt: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: (pageNum - 1) * limitNum,
+      take: limitNum,
     });
 
     return {
       data: notifications,
       total,
-      page,
-      totalPages: Math.ceil(total / limit),
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
       unreadCount: await this.getUnreadCount(userId),
     };
   }

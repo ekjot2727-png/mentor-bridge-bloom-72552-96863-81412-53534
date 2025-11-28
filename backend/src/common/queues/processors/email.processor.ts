@@ -3,10 +3,14 @@ import { Job } from 'bullmq';
 import { QUEUE_NAMES } from '../constants';
 import { EmailJobData } from '../queue.service';
 import { LoggerService } from '../../services/logger.service';
+import { EmailService } from '../../services/email.service';
 
 @Processor(QUEUE_NAMES.EMAIL)
 export class EmailProcessor extends WorkerHost {
-  constructor(private logger: LoggerService) {
+  constructor(
+    private logger: LoggerService,
+    private emailService: EmailService,
+  ) {
     super();
   }
 
@@ -16,32 +20,20 @@ export class EmailProcessor extends WorkerHost {
     this.logger.log(`Processing email job ${job.id}: ${subject} to ${to}`);
 
     try {
-      // TODO: Integrate with actual email service (SendGrid, Nodemailer, etc.)
-      // For now, simulate email sending
-      await this.simulateEmailSend(to, subject, template, context);
+      // Use the EmailService for sending templated emails
+      const result = await this.emailService.send({
+        to,
+        subject,
+        template,
+        context,
+      });
       
       this.logger.log(`Email sent successfully: ${job.id}`);
-      return { success: true, sentAt: new Date() };
+      return { success: result, sentAt: new Date() };
     } catch (error) {
       this.logger.error(`Email job ${job.id} failed: ${error.message}`);
       throw error;
     }
-  }
-
-  private async simulateEmailSend(
-    to: string,
-    subject: string,
-    template: string,
-    context: Record<string, any>,
-  ): Promise<void> {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    
-    // Log the email details (in production, this would send the actual email)
-    this.logger.log(`[EMAIL] To: ${to}, Subject: ${subject}, Template: ${template}`);
-    
-    // In production, replace with:
-    // await this.emailService.send({ to, subject, template, context });
   }
 
   @OnWorkerEvent('completed')

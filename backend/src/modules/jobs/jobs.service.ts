@@ -37,7 +37,9 @@ export class JobsService {
 
   async getJobs(filterDto: JobFilterDto) {
     const { keyword, jobType, status, location, company, skill, page = 1, limit = 10 } = filterDto;
-    const skip = (page - 1) * limit;
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 10;
+    const skip = (pageNum - 1) * limitNum;
 
     const queryBuilder = this.jobRepository.createQueryBuilder('job');
 
@@ -74,7 +76,7 @@ export class JobsService {
     queryBuilder
       .orderBy('job.postedDate', 'DESC')
       .skip(skip)
-      .take(limit);
+      .take(limitNum);
 
     const [jobs, total] = await queryBuilder.getManyAndCount();
 
@@ -82,9 +84,9 @@ export class JobsService {
       data: jobs,
       pagination: {
         total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
       },
     };
   }
@@ -138,22 +140,24 @@ export class JobsService {
   }
 
   async getMyPostedJobs(userId: string, page = 1, limit = 10) {
-    const skip = (page - 1) * limit;
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 10;
+    const skip = (pageNum - 1) * limitNum;
 
     const [jobs, total] = await this.jobRepository.findAndCount({
       where: { postedByUserId: userId },
       order: { postedDate: 'DESC' },
       skip,
-      take: limit,
+      take: limitNum,
     });
 
     return {
       data: jobs,
       pagination: {
         total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
       },
     };
   }

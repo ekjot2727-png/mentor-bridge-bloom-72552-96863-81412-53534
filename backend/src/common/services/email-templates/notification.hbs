@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Notification</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 40px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #4F46E5;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: #4F46E5;
+    }
+    .notification-badge {
+      display: inline-block;
+      background-color: #FEF3C7;
+      color: #92400E;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+    }
+    h1 {
+      color: #1f2937;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+    .content {
+      color: #4b5563;
+    }
+    .notification-box {
+      background-color: #f0f9ff;
+      border-left: 4px solid #4F46E5;
+      padding: 20px;
+      border-radius: 0 6px 6px 0;
+      margin: 20px 0;
+    }
+    .notification-title {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 10px;
+    }
+    .notification-message {
+      color: #4b5563;
+    }
+    .button {
+      display: inline-block;
+      background-color: #4F46E5;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 12px 30px;
+      border-radius: 6px;
+      margin: 20px 0;
+      font-weight: 600;
+    }
+    .button:hover {
+      background-color: #4338CA;
+    }
+    .timestamp {
+      color: #9ca3af;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      color: #9ca3af;
+      font-size: 12px;
+    }
+    .unsubscribe {
+      color: #6b7280;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">ALNET</div>
+    </div>
+    
+    <span class="notification-badge">{{type}}</span>
+    
+    <h1>You have a new notification</h1>
+    
+    <div class="content">
+      <p>Hi {{name}},</p>
+      
+      <div class="notification-box">
+        <div class="notification-title">{{title}}</div>
+        <div class="notification-message">{{message}}</div>
+        <div class="timestamp">{{timestamp}}</div>
+      </div>
+      
+      <center>
+        <a href="{{actionUrl}}" class="button">View Details</a>
+      </center>
+      
+      <p>Stay connected with your alumni network!</p>
+    </div>
+    
+    <div class="footer">
+      <p>© {{year}} ALNET. All rights reserved.</p>
+      <p>
+        <a href="{{preferencesUrl}}" class="unsubscribe">Manage notification preferences</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

@@ -73,6 +73,9 @@ const UserManagement = safeImport(() => import("./pages/admin/UserManagement"), 
 const ContentModeration = safeImport(() => import("./pages/admin/ContentModeration"), "ContentModeration");
 const Communications = safeImport(() => import("./pages/admin/Communications"), "Communications");
 
+// Donations Page
+const Donations = safeImport(() => import("./pages/Donations"), "Donations");
+
 // Loading component
 const Loading = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -182,6 +185,7 @@ const App = () => {
                   <Route path="/profile-edit" element={<ProfileEdit />} />
                   <Route path="/messages" element={<Messaging />} />
                   <Route path="/connections" element={<Connections />} />
+                  <Route path="/donations" element={<Donations />} />
                   
                   {/* Catch all - 404 */}
                   <Route path="*" element={<NotFound />} />
